@@ -1,12 +1,20 @@
 spring:
   application:
     name: enterprise-ai-operation-assistant
+  datasource:
+    url: jdbc:postgresql://localhost:5432/aiassistant
+    username: aiassistant
+    password: aiassistant
+  jpa:
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
 
 management:
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: health
   endpoint:
     health:
-      show-details: when-authorized
+      show-details: always
