@@ -91,7 +91,7 @@ public class SecurityConfig {
       AuthenticationException authException)
       throws IOException {
     writeError(
-        response, HttpServletResponse.SC_UNAUTHORIZED, "unauthorized", "Authentication required");
+        response, HttpServletResponse.SC_UNAUTHORIZED, "UNAUTHORIZED", "Authentication required");
   }
 
   private void handleForbidden(
@@ -107,7 +107,7 @@ public class SecurityConfig {
       String ip = request.getRemoteAddr();
       auditService.record(AuditEvent.ACCESS_DENIED, null, email, ip, null);
     }
-    writeError(response, HttpServletResponse.SC_FORBIDDEN, "forbidden", "Access denied");
+    writeError(response, HttpServletResponse.SC_FORBIDDEN, "ACCESS_DENIED", "Access denied");
   }
 
   private void writeError(HttpServletResponse response, int status, String error, String message)

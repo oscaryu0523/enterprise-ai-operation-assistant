@@ -18,7 +18,10 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 // BDD 3.2: health returns UP with db component UP
 // H2 fallback is supplied by application-test.yml (test profile); @DynamicPropertySource
 // overrides the datasource URL/credentials with the Testcontainer when Docker is available.
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
+// show-details=always is a test-only override to verify DB component status (main app uses when_authorized).
+@SpringBootTest(
+    webEnvironment = SpringBootTest.WebEnvironment.MOCK,
+    properties = "management.endpoint.health.show-details=always")
 @AutoConfigureMockMvc
 @Testcontainers(disabledWithoutDocker = true)
 class HealthCheckIntegrationTest {

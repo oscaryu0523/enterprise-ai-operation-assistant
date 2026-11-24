@@ -57,7 +57,7 @@ public class AuthService {
     String hashToCheck = user != null ? user.getPasswordHash() : DUMMY_HASH;
     boolean matches = passwordEncoder.matches(request.password(), hashToCheck);
 
-    if (user == null || !matches) {
+    if (user == null || !matches || !user.isEnabled()) {
       auditService.record(AuditEvent.LOGIN_FAILED, null, request.email(), ipAddress, null);
       throw new BadCredentialsException("Invalid email or password");
     }

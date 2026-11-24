@@ -14,13 +14,13 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(EmailAlreadyExistsException.class)
   @ResponseStatus(HttpStatus.CONFLICT)
   public ErrorResponse handleEmailAlreadyExists(EmailAlreadyExistsException ex) {
-    return ErrorResponse.of("email_already_exists", ex.getMessage());
+    return ErrorResponse.of("EMAIL_ALREADY_EXISTS", ex.getMessage());
   }
 
   @ExceptionHandler(BadCredentialsException.class)
   @ResponseStatus(HttpStatus.UNAUTHORIZED)
   public ErrorResponse handleBadCredentials(BadCredentialsException ex) {
-    return ErrorResponse.of("invalid_credentials", "Invalid email or password");
+    return ErrorResponse.of("INVALID_CREDENTIALS", "Invalid email or password");
   }
 
   @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -31,6 +31,6 @@ public class GlobalExceptionHandler {
             .map(e -> e.getField() + ": " + e.getDefaultMessage())
             .findFirst()
             .orElse("Validation failed");
-    return ErrorResponse.of("validation_error", message);
+    return ErrorResponse.of("VALIDATION_ERROR", message);
   }
 }

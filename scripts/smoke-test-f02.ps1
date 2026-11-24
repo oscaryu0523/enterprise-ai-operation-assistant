@@ -45,7 +45,7 @@ Write-Host ""
 Write-Host "[Setup] Creating test accounts..."
 $r = Invoke-Api POST "/api/auth/register" @{ email=$USER_EMAIL; password=$PASSWORD; department="SmokeTest" }
 if ($r.Status -ne 201) { Write-Host "  ERROR  user register failed ($($r.Status)), aborting" -ForegroundColor Red; exit 1 }
-$userToken = $r.Body.access_token
+$userToken = $r.Body.token
 
 $r2 = Invoke-Api POST "/api/auth/register" @{ email=$ADMIN_EMAIL; password=$PASSWORD }
 if ($r2.Status -ne 201) { Write-Host "  ERROR  admin register failed ($($r2.Status)), aborting" -ForegroundColor Red; exit 1 }
@@ -54,7 +54,7 @@ docker compose exec -T db psql -U aiassistant -d aiassistant -c "UPDATE users SE
 
 $rAdmin = Invoke-Api POST "/api/auth/login" @{ email=$ADMIN_EMAIL; password=$PASSWORD }
 if ($rAdmin.Status -ne 200) { Write-Host "  ERROR  admin login failed, aborting" -ForegroundColor Red; exit 1 }
-$adminToken = $rAdmin.Body.access_token
+$adminToken = $rAdmin.Body.token
 Write-Host "  OK    user=$USER_EMAIL" -ForegroundColor DarkGray
 Write-Host "  OK    admin=$ADMIN_EMAIL" -ForegroundColor DarkGray
 

@@ -87,7 +87,7 @@ class AuthControllerTest {
                 .content(
                     "{\"email\":\"new@example.com\",\"password\":\"NewPass123\",\"department\":\"Engineering\"}"))
         .andExpect(status().isCreated())
-        .andExpect(jsonPath("$.access_token").isNotEmpty())
+        .andExpect(jsonPath("$.token").isNotEmpty())
         .andExpect(jsonPath("$.token_type").value("Bearer"))
         .andExpect(jsonPath("$.email").value("new@example.com"))
         .andExpect(jsonPath("$.role").value("ROLE_USER"));
@@ -104,7 +104,7 @@ class AuthControllerTest {
                 .contentType(APPLICATION_JSON)
                 .content("{\"email\":\"user@example.com\",\"password\":\"Pass1234\"}"))
         .andExpect(status().isConflict())
-        .andExpect(jsonPath("$.error").value("email_already_exists"));
+        .andExpect(jsonPath("$.error").value("EMAIL_ALREADY_EXISTS"));
   }
 
   // ─── BDD 3.3: Login success ─────────────────────────────────────────────
@@ -118,7 +118,7 @@ class AuthControllerTest {
                 .contentType(APPLICATION_JSON)
                 .content("{\"email\":\"user@example.com\",\"password\":\"password123\"}"))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.access_token").isNotEmpty())
+        .andExpect(jsonPath("$.token").isNotEmpty())
         .andExpect(jsonPath("$.token_type").value("Bearer"))
         .andExpect(jsonPath("$.expires_in").value(3600));
   }
@@ -141,7 +141,7 @@ class AuthControllerTest {
                 .contentType(APPLICATION_JSON)
                 .content("{\"email\":\"user@example.com\",\"password\":\"wrong\"}"))
         .andExpect(status().isUnauthorized())
-        .andExpect(jsonPath("$.error").value("invalid_credentials"));
+        .andExpect(jsonPath("$.error").value("INVALID_CREDENTIALS"));
   }
 
   @Test
@@ -177,6 +177,22 @@ class AuthControllerTest {
         (String) JsonPath.read(unknownEmail.getResponse().getContentAsString(), "$.error"));
   }
 
+  @Test
+  @DisplayName("SPEC §5: disabled account returns 401 same as wrong password")
+  void login_withDisabledAccount_returns401() throws Exception {
+    userRepository.save(
+        new User("disabled@example.com", passwordEncoder.encode("password123"), "ROLE_USER", "IT", false));
+
+    mockMvc
+        .perform(
+            post("/api/auth/login")
+                .contentType(APPLICATION_JSON)
+                .content("{\"email\":\"disabled@example.com\",\"password\":\"password123\"}"))
+        .andExpect(status().isUnauthorized())
+        .andExpect(jsonPath("$.error").value("INVALID_CREDENTIALS"));
+    assertTrue(hasAuditEvent(AuditEvent.LOGIN_FAILED, "disabled@example.com"));
+  }
+
   // ─── BDD 3.5: JWT auth ──────────────────────────────────────────────────
 
   @Test
@@ -201,7 +217,7 @@ class AuthControllerTest {
     mockMvc
         .perform(get("/api/users/me"))
         .andExpect(status().isUnauthorized())
-        .andExpect(jsonPath("$.error").value("unauthorized"));
+        .andExpect(jsonPath("$.error").value("UNAUTHORIZED"));
   }
 
   @Test
@@ -225,7 +241,7 @@ class AuthControllerTest {
                     HttpHeaders.AUTHORIZATION,
                     "Bearer " + login("user@example.com", "password123")))
         .andExpect(status().isForbidden())
-        .andExpect(jsonPath("$.error").value("forbidden"));
+        .andExpect(jsonPath("$.error").value("ACCESS_DENIED"));
     assertTrue(hasAuditEvent(AuditEvent.ACCESS_DENIED, "user@example.com"));
   }
 
@@ -294,7 +310,7 @@ class AuthControllerTest {
                     .content("{\"email\":\"%s\",\"password\":\"%s\"}".formatted(email, password)))
             .andExpect(status().isOk())
             .andReturn();
-    return JsonPath.read(result.getResponse().getContentAsString(), "$.access_token");
+    return JsonPath.read(result.getResponse().getContentAsString(), "$.token");
   }
 
   private String expiredToken() {

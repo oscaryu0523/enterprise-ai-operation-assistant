@@ -35,8 +35,8 @@ class AuthServiceTest {
     AuthResponse response =
         deps.authService().login(new LoginRequest("user@example.com", "correct"), "127.0.0.1");
 
-    assertNotNull(response.accessToken());
-    assertEquals("mock.jwt.token", response.accessToken());
+    assertNotNull(response.token());
+    assertEquals("mock.jwt.token", response.token());
     assertEquals("Bearer", response.tokenType());
     assertEquals(3600, response.expiresIn());
     assertEquals(AuditEvent.LOGIN_SUCCESS, deps.auditService().records().getFirst().event());
