@@ -16,6 +16,8 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 // BDD 3.2: health returns UP with db component UP
+// H2 fallback is supplied by application-test.yml (test profile); @DynamicPropertySource
+// overrides the datasource URL/credentials with the Testcontainer when Docker is available.
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @AutoConfigureMockMvc
 @Testcontainers(disabledWithoutDocker = true)
@@ -25,6 +27,7 @@ class HealthCheckIntegrationTest {
 
   @DynamicPropertySource
   static void configureProperties(DynamicPropertyRegistry registry) {
+    if (!postgres.isRunning()) return;
     registry.add("spring.datasource.url", postgres::getJdbcUrl);
     registry.add("spring.datasource.username", postgres::getUsername);
     registry.add("spring.datasource.password", postgres::getPassword);

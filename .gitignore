@@ -4,6 +4,7 @@ target/
 .env
 .env.local
 *.log
+application-local.yml
 
 # Maven wrapper
 !.mvn/wrapper/maven-wrapper.jar
