@@ -19,7 +19,7 @@
 
 1. 從 `main` 建立短期分支：`feature/<name>`、`fix/<name>`、`docs/<name>` 或 `refactor/<name>`。本專案不使用長期 `develop` 分支。
 2. 程式碼變更採測試導向開發（TDD）：先寫會失敗的測試，再完成最小實作，最後重構（Red → Green → Refactor，紅燈→綠燈→重構）。Agent 功能的 BDD 情境也要納入適用的 EDD 評估案例。
-3. Implementer 先自我審查完整 Diff 並執行相關本機檢查。風險導向檢查優先涵蓋授權、Prompt Injection（提示注入）、工具誤用、模型／Provider（服務提供者）故障及敏感資料處理。
+3. Implementer 先自我審查完整 Diff 並執行相關本機檢查。風險導向檢查優先涵蓋授權、Prompt Injection（提示注入）、工具誤用、模型／Provider（服務提供者）故障及敏感資料處理。功能包含 HTTP API 端點時，本機檢查還須執行對應的 API Smoke Test：在 App 與 DB 啟動後，跑 `scripts/smoke-test-<feature>.ps1`（或等效腳本），驗證 BDD 驗收條件涵蓋的所有 Happy Path 及主要 Error Path 均回傳預期狀態碼與欄位。Smoke Test 腳本與功能同步維護，結果納入 H2 呈報內容。
 4. **H2 PR 發布核准：**Claude Code 完成本機實作及檢查後，向使用者提供 Diff、結果、設計理由、檔案與風險；使用者一次明確核准初次發布後，才 Commit、Push 並建立 PR。QA 需要在 PR 上驗收；H2 授權涵蓋該 PR 內同一 SPEC 範圍的後續修正提交，不必逐輪請使用者核准。
 5. PR 建立後，Claude Code 在**全新 QA 對話**讀取核准的 `SPEC.md`、PR Diff、測試／CI 證據及驗收指令，不沿用實作對話的判斷。QA 依 Critical／Major／Minor 回報失敗條件、重現方式、相關檔案與行號、證據、影響及建議。能對應變更行的發現必須在 PR 以逐行 Review comment 錨定；多行問題用最小必要範圍。若 Reviewer CLI 無 GitHub 寫入權限，由實作對話的 Claude Code 透明代貼並標明 Reviewer 與代貼者。Claude Code 在核准 SPEC.md 範圍內修正、測試並更新同一 PR，不必每輪重新取得範圍核准；QA 逐項複審。Reviewer 確認修正後，在對應 inline thread 回覆 `Resolved after re-review` 並標記 Resolved，另留 PR 摘要；未經確認不得標記 Resolved。需求／驗收範圍改變時，回到使用者重新核准 SPEC.md。Critical／Major 必須修正，或由使用者明確接受並記錄風險；Minor 修正後需複審，或在 PR 回覆記錄。
 6. 未實際收到 Reviewer 審查結果，不可宣稱已完成獨立 Review。

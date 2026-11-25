@@ -7,8 +7,10 @@ spring:
     password: aiassistant
   jpa:
     hibernate:
-      ddl-auto: none
+      ddl-auto: validate
     open-in-view: false
+  flyway:
+    enabled: true
 
 management:
   endpoints:
@@ -17,4 +19,9 @@ management:
         include: health
   endpoint:
     health:
-      show-details: always
+      show-details: when_authorized
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:dev-secret-do-not-use-in-production-change-me-now!}
+    expiration-seconds: 86400
