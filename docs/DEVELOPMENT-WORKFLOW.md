@@ -68,7 +68,8 @@ Claude Code PM／架構師先在同一個對話釐清需求、整理架構並建
 - 文件專用變更檢查 Markdown 結構、連結及 Diff，不必執行應用程式測試。
 - 檢查完整 Diff：正確性、資安、錯誤處理、回歸風險、機密資料、意外檔案及範圍膨脹。
 - 測試未通過時，修正後重跑；若受環境或外部服務限制，明確標示未驗證部分。
-- 本機檢查完成後，實作者先把 Diff、檢查結果、設計理由、檔案清單與風險交給使用者審查。使用者核准 H2 後才 Commit、Push 並建立 PR。
+- 本機檢查完成後，若有新 HTTP endpoint，先在 app 啟動狀態下執行 `python scripts/smoke_test.py`（需 Python 3 + `pip install requests`），涵蓋 F02+F03 happy path 與失敗情境；新功能的情境加入同一腳本再執行。Docker 不可用時記錄為已知限制。
+- 實作者先把 Diff、檢查結果（含 smoke test 結果或跳過原因）、設計理由、檔案清單與風險交給使用者審查。使用者核准 H2 後才 Commit、Push 並建立 PR。
 - QA 開始前先核准 H2，建立 PR，然後在全新 Claude Code 對話提供已核准 `SPEC.md`、PR 連結、最新 Diff、測試／CI 證據及驗收指令。每個可錨定變更行的 finding 必須在 PR 以逐行 Review comment 標示，說明嚴重度、問題、證據、影響及修正建議；另用 review summary 彙整。若 CLI 無 GitHub 寫入權限，由 Codex 透明代貼並標明 Reviewer／代貼者。
 - Codex 在核准 `SPEC.md` 範圍內修正、執行檢查並更新同一 PR，不必每輪重新請使用者核准。每次複審開新 Claude Code 對話，交付 `SPEC.md`、最新 Diff、檢查證據與前次 findings／處理狀態。QA 確認修正後，逐項回覆原 inline thread `Resolved after re-review` 並標記 Resolved，再留摘要列出已解決及未解決項目；未確認不得標記 Resolved。範圍改變時停下，更新 `SPEC.md` 並重新取得 H1 核准。
 

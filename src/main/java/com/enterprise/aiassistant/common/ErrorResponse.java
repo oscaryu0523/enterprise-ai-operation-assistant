@@ -2,9 +2,9 @@ package com.enterprise.aiassistant.common;
 
 import java.time.Instant;
 
-public record ErrorResponse(String error, String message, Instant timestamp) {
+public record ErrorResponse(String code, String message, Instant timestamp) {
 
-  public static ErrorResponse of(String error, String message) {
-    return new ErrorResponse(error, message, Instant.now());
+  public static ErrorResponse of(String code, String message) {
+    return new ErrorResponse(code, message, Instant.now());
   }
 }
