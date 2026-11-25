@@ -196,7 +196,12 @@ class AuthControllerTest {
   @DisplayName("SPEC §5: disabled account returns 401 same as wrong password")
   void login_withDisabledAccount_returns401() throws Exception {
     userRepository.save(
-        new User("disabled@example.com", passwordEncoder.encode("password123"), "ROLE_USER", "IT", false));
+        new User(
+            "disabled@example.com",
+            passwordEncoder.encode("password123"),
+            "ROLE_USER",
+            "IT",
+            false));
 
     mockMvc
         .perform(
