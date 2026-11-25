@@ -105,7 +105,7 @@ class AuthControllerTest {
                 .contentType(APPLICATION_JSON)
                 .content("{\"email\":\"user@example.com\",\"password\":\"Pass1234\"}"))
         .andExpect(status().isConflict())
-        .andExpect(jsonPath("$.error").value("EMAIL_ALREADY_EXISTS"));
+        .andExpect(jsonPath("$.code").value("EMAIL_ALREADY_EXISTS"));
     assertTrue(
         auditLogRepository.findAll().stream()
             .noneMatch(log -> log.getEvent() == AuditEvent.REGISTER),
@@ -151,7 +151,7 @@ class AuthControllerTest {
                 .contentType(APPLICATION_JSON)
                 .content("{\"email\":\"user@example.com\",\"password\":\"wrong\"}"))
         .andExpect(status().isUnauthorized())
-        .andExpect(jsonPath("$.error").value("INVALID_CREDENTIALS"));
+        .andExpect(jsonPath("$.code").value("INVALID_CREDENTIALS"));
   }
 
   @Test
@@ -188,8 +188,8 @@ class AuthControllerTest {
             .andReturn();
     assertEquals(wrongPassword.getResponse().getStatus(), unknownEmail.getResponse().getStatus());
     assertEquals(
-        (String) JsonPath.read(wrongPassword.getResponse().getContentAsString(), "$.error"),
-        (String) JsonPath.read(unknownEmail.getResponse().getContentAsString(), "$.error"));
+        (String) JsonPath.read(wrongPassword.getResponse().getContentAsString(), "$.code"),
+        (String) JsonPath.read(unknownEmail.getResponse().getContentAsString(), "$.code"));
   }
 
   @Test
@@ -209,7 +209,7 @@ class AuthControllerTest {
                 .contentType(APPLICATION_JSON)
                 .content("{\"email\":\"disabled@example.com\",\"password\":\"password123\"}"))
         .andExpect(status().isUnauthorized())
-        .andExpect(jsonPath("$.error").value("INVALID_CREDENTIALS"));
+        .andExpect(jsonPath("$.code").value("INVALID_CREDENTIALS"));
     assertTrue(hasAuditEvent(AuditEvent.LOGIN_FAILED, "disabled@example.com"));
   }
 
@@ -237,7 +237,7 @@ class AuthControllerTest {
     mockMvc
         .perform(get("/api/users/me"))
         .andExpect(status().isUnauthorized())
-        .andExpect(jsonPath("$.error").value("UNAUTHORIZED"));
+        .andExpect(jsonPath("$.code").value("UNAUTHORIZED"));
   }
 
   @Test
@@ -261,7 +261,7 @@ class AuthControllerTest {
                     HttpHeaders.AUTHORIZATION,
                     "Bearer " + login("user@example.com", "password123")))
         .andExpect(status().isForbidden())
-        .andExpect(jsonPath("$.error").value("ACCESS_DENIED"));
+        .andExpect(jsonPath("$.code").value("ACCESS_DENIED"));
     assertTrue(hasAuditEvent(AuditEvent.ACCESS_DENIED, "user@example.com"));
   }
 

@@ -117,7 +117,7 @@ public class SecurityConfig {
     response
         .getWriter()
         .write(
-            "{\"error\":\"%s\",\"message\":\"%s\",\"timestamp\":\"%s\"}"
+            "{\"code\":\"%s\",\"message\":\"%s\",\"timestamp\":\"%s\"}"
                 .formatted(error, message, Instant.now()));
   }
 }

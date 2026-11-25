@@ -67,9 +67,11 @@ public class ConversationService {
   @Transactional
   public MessageResponse addMessage(
       UUID conversationId, AddMessageRequest request, Authentication auth) {
-    findAndCheckAccess(conversationId, auth);
+    Conversation conversation = findAndCheckAccess(conversationId, auth);
     Message message =
         messageRepository.save(new Message(conversationId, request.role(), request.content()));
+    conversation.touch();
+    conversationRepository.save(conversation);
     return MessageResponse.of(message);
   }
 

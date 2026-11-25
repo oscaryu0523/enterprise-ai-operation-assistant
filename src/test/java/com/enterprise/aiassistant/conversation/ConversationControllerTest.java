@@ -131,24 +131,25 @@ class ConversationControllerTest {
                 .contentType(APPLICATION_JSON)
                 .content("{\"title\":\"\"}"))
         .andExpect(status().isBadRequest())
-        .andExpect(jsonPath("$.error").value("VALIDATION_ERROR"));
+        .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
   }
 
   @Test
-  @DisplayName("BDD 3.1c: 未認證 → 401")
+  @DisplayName("BDD 3.1c: 未認證 → 401 UNAUTHORIZED")
   void createConversation_unauthenticated_returns401() throws Exception {
     mockMvc
         .perform(
             post("/api/conversations")
                 .contentType(APPLICATION_JSON)
                 .content("{\"title\":\"test\"}"))
-        .andExpect(status().isUnauthorized());
+        .andExpect(status().isUnauthorized())
+        .andExpect(jsonPath("$.code").value("UNAUTHORIZED"));
   }
 
   // ── 3.2 列出對話 ──────────────────────────────────────────────────────────
 
   @Test
-  @DisplayName("BDD 3.2a: 使用者 A 有 2 個對話，只看到自己的")
+  @DisplayName("BDD 3.2a: 使用者 A 有 2 個對話，只看到自己的，每筆含 id/title/status/createdAt，不含 messages")
   void listConversations_returnsOnlyOwn() throws Exception {
     conversationRepository.save(new Conversation(userA.getId(), "對話 A1"));
     conversationRepository.save(new Conversation(userA.getId(), "對話 A2"));
@@ -159,7 +160,12 @@ class ConversationControllerTest {
             get("/api/conversations")
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + jwt("a@example.com", "ROLE_USER")))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.length()").value(2));
+        .andExpect(jsonPath("$.length()").value(2))
+        .andExpect(jsonPath("$[0].id").isNotEmpty())
+        .andExpect(jsonPath("$[0].title").isNotEmpty())
+        .andExpect(jsonPath("$[0].status").isNotEmpty())
+        .andExpect(jsonPath("$[0].createdAt").isNotEmpty())
+        .andExpect(jsonPath("$[0].messages").doesNotExist());
   }
 
   @Test
@@ -200,7 +206,7 @@ class ConversationControllerTest {
             get("/api/conversations/" + c.getId())
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + jwt("a@example.com", "ROLE_USER")))
         .andExpect(status().isForbidden())
-        .andExpect(jsonPath("$.error").value("FORBIDDEN"));
+        .andExpect(jsonPath("$.code").value("FORBIDDEN"));
   }
 
   @Test
@@ -211,7 +217,7 @@ class ConversationControllerTest {
             get("/api/conversations/" + UUID.randomUUID())
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + jwt("a@example.com", "ROLE_USER")))
         .andExpect(status().isNotFound())
-        .andExpect(jsonPath("$.error").value("NOT_FOUND"));
+        .andExpect(jsonPath("$.code").value("NOT_FOUND"));
   }
 
   // ── 3.4 新增訊息 ──────────────────────────────────────────────────────────
@@ -262,7 +268,7 @@ class ConversationControllerTest {
                 .contentType(APPLICATION_JSON)
                 .content("{\"role\":\"invalid_role\",\"content\":\"test\"}"))
         .andExpect(status().isBadRequest())
-        .andExpect(jsonPath("$.error").value("VALIDATION_ERROR"));
+        .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
   }
 
   @Test
@@ -277,7 +283,7 @@ class ConversationControllerTest {
                 .contentType(APPLICATION_JSON)
                 .content("{\"role\":\"user\",\"content\":\"test\"}"))
         .andExpect(status().isForbidden())
-        .andExpect(jsonPath("$.error").value("FORBIDDEN"));
+        .andExpect(jsonPath("$.code").value("FORBIDDEN"));
   }
 
   @Test
@@ -290,7 +296,7 @@ class ConversationControllerTest {
                 .contentType(APPLICATION_JSON)
                 .content("{\"role\":\"user\",\"content\":\"test\"}"))
         .andExpect(status().isNotFound())
-        .andExpect(jsonPath("$.error").value("NOT_FOUND"));
+        .andExpect(jsonPath("$.code").value("NOT_FOUND"));
   }
 
   // ── 3.5 查詢訊息列表 ──────────────────────────────────────────────────────
@@ -343,5 +349,23 @@ class ConversationControllerTest {
                 .contentType(APPLICATION_JSON)
                 .content("{\"role\":\"assistant\",\"content\":\"Admin reply\"}"))
         .andExpect(status().isCreated());
+  }
+
+  // ── Edge: content 長度邊界 ───────────────────────────────────────────────
+
+  @Test
+  @DisplayName("Edge: content 超過 32000 字元 → 400 VALIDATION_ERROR")
+  void addMessage_contentTooLong_returns400() throws Exception {
+    Conversation c = conversationRepository.save(new Conversation(userA.getId(), "對話 A"));
+    String longContent = "x".repeat(32001);
+
+    mockMvc
+        .perform(
+            post("/api/conversations/" + c.getId() + "/messages")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + jwt("a@example.com", "ROLE_USER"))
+                .contentType(APPLICATION_JSON)
+                .content("{\"role\":\"user\",\"content\":\"" + longContent + "\"}"))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
   }
 }

@@ -2,7 +2,7 @@
 
 > **Feature ID：** F03
 > **版本：** 0.1
-> **狀態：** 待 H1 核准
+> **狀態：** 已實作（PR #3）
 > **作者：** Claude Code PM／架構師
 > **建立日期：** 2026-11-25
 > **前置 Feature：** F02（身分驗證與 RBAC）
@@ -314,6 +314,8 @@ com.enterprise.aiassistant.conversation/
 ---
 
 ## 7. 錯誤行為
+
+所有錯誤回應使用 `ErrorResponse` record，格式：`{"code": "...", "message": "...", "timestamp": "<ISO 8601>"}`。
 
 | 情境 | HTTP | code |
 |------|------|------|
