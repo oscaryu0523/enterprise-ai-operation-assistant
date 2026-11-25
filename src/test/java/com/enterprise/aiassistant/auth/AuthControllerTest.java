@@ -91,12 +91,13 @@ class AuthControllerTest {
         .andExpect(jsonPath("$.token_type").value("Bearer"))
         .andExpect(jsonPath("$.email").value("new@example.com"))
         .andExpect(jsonPath("$.role").value("ROLE_USER"));
+    assertTrue(hasAuditEvent(AuditEvent.REGISTER, "new@example.com"));
   }
 
   // ─── BDD 3.2: Duplicate email ───────────────────────────────────────────
 
   @Test
-  @DisplayName("BDD 3.2: register with existing email returns 409")
+  @DisplayName("BDD 3.2: register with existing email returns 409 and no audit log written")
   void register_withExistingEmail_returns409() throws Exception {
     mockMvc
         .perform(
@@ -105,6 +106,10 @@ class AuthControllerTest {
                 .content("{\"email\":\"user@example.com\",\"password\":\"Pass1234\"}"))
         .andExpect(status().isConflict())
         .andExpect(jsonPath("$.error").value("EMAIL_ALREADY_EXISTS"));
+    assertTrue(
+        auditLogRepository.findAll().stream()
+            .noneMatch(log -> log.getEvent() == AuditEvent.REGISTER),
+        "No REGISTER audit log should be written for duplicate email");
   }
 
   // ─── BDD 3.3: Login success ─────────────────────────────────────────────
@@ -124,10 +129,15 @@ class AuthControllerTest {
   }
 
   @Test
-  @DisplayName("BDD 3.3: login success writes LOGIN_SUCCESS audit log")
+  @DisplayName("BDD 3.3: login success writes LOGIN_SUCCESS audit log with ip_address")
   void login_withValidCredentials_writesAuditLog() throws Exception {
     login("user@example.com", "password123");
     assertTrue(hasAuditEvent(AuditEvent.LOGIN_SUCCESS, "user@example.com"));
+    assertTrue(
+        auditLogRepository.findAll().stream()
+            .filter(log -> log.getEvent() == AuditEvent.LOGIN_SUCCESS)
+            .anyMatch(log -> log.getIpAddress() != null && !log.getIpAddress().isBlank()),
+        "LOGIN_SUCCESS audit log must record ip_address");
   }
 
   // ─── BDD 3.4: Login failure ─────────────────────────────────────────────
@@ -145,13 +155,18 @@ class AuthControllerTest {
   }
 
   @Test
-  @DisplayName("BDD 3.4: login failure writes LOGIN_FAILED audit log")
+  @DisplayName("BDD 3.4: login failure writes LOGIN_FAILED audit log with ip_address")
   void login_withWrongPassword_writesAuditLog() throws Exception {
     mockMvc.perform(
         post("/api/auth/login")
             .contentType(APPLICATION_JSON)
             .content("{\"email\":\"user@example.com\",\"password\":\"wrong\"}"));
     assertTrue(hasAuditEvent(AuditEvent.LOGIN_FAILED, "user@example.com"));
+    assertTrue(
+        auditLogRepository.findAll().stream()
+            .filter(log -> log.getEvent() == AuditEvent.LOGIN_FAILED)
+            .anyMatch(log -> log.getIpAddress() != null && !log.getIpAddress().isBlank()),
+        "LOGIN_FAILED audit log must record ip_address");
   }
 
   @Test
